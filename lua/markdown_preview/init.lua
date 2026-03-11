@@ -6,7 +6,7 @@ local ls_server = require("live_server.server")
 local M = {}
 
 M.config = {
-	port = 8421,
+	port = 0,
 	open_browser = true,
 
 	content_name = "content.md",
@@ -408,7 +408,7 @@ function M.start()
 		})
 		if not ok then
 			vim.notify(
-				("Markdown Preview: failed to start server on port %d — %s"):format(M.config.port, tostring(inst)),
+				("Markdown Preview: failed to start server (port %s) — %s"):format(tostring(M.config.port), tostring(inst)),
 				vim.log.levels.ERROR
 			)
 			return
@@ -417,7 +417,7 @@ function M.start()
 
 		if M.config.open_browser then
 			vim.defer_fn(function()
-				util.open_in_browser(("http://127.0.0.1:%d/"):format(M.config.port))
+				util.open_in_browser(("http://127.0.0.1:%d/"):format(inst.port))
 			end, 200)
 		end
 	else
@@ -429,7 +429,7 @@ function M.start()
 		-- No browser tab connected (user closed it)? Re-open.
 		if M.config.open_browser and ls_server.connected_client_count(M._server_instance) == 0 then
 			vim.defer_fn(function()
-				util.open_in_browser(("http://127.0.0.1:%d/"):format(M.config.port))
+				util.open_in_browser(("http://127.0.0.1:%d/"):format(M._server_instance.port))
 			end, 200)
 		end
 	end
