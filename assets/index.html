@@ -831,6 +831,7 @@
     <script src="https://cdn.jsdelivr.net/npm/markdown-it-footnote@4.0.0/dist/markdown-it-footnote.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it-task-lists@2.1.1/dist/markdown-it-task-lists.min.js"></script>
     <script src="https://unpkg.com/markdown-it-anchor@9.2.0/dist/markdownItAnchor.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-front-matter@0.2.4/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.28/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it-texmath@1.0.0/texmath.js"></script>
 
@@ -961,6 +962,7 @@
         });
 
         // Register plugins
+        if (window.markdownItFrontMatter) md.use(window.markdownItFrontMatter, function() {});
         md.use(markdownItGithubAlerts);
         if (window.markdownitEmoji) md.use(window.markdownitEmoji);
         if (window.markdownitFootnote) md.use(window.markdownitFootnote);
