@@ -6,6 +6,7 @@ local ls_server = require("live_server.server")
 local M = {}
 
 M.config = {
+	host = "127.0.0.1", -- bind address (use "0.0.0.0" to expose externally)
 	port = 0, -- 0 = auto; effective port depends on instance_mode
 	open_browser = true,
 
@@ -347,7 +348,7 @@ local function send_scroll_sync(bufnr)
 	if M._server_instance then
 		pcall(ls_server.send_event, M._server_instance, "scroll", payload)
 	elseif M._takeover_port then
-		require("markdown_preview.remote").send_event(M._takeover_port, "scroll", payload)
+		require("markdown_preview.remote").send_event(M.config.host, M._takeover_port, "scroll", payload)
 	end
 end
 
@@ -418,7 +419,7 @@ function M.start()
 	if M.config.instance_mode == "takeover" and not M._server_instance then
 		local lock = require("markdown_preview.lock")
 		local lock_data = lock.read()
-		if lock_data and lock.is_server_alive(lock_data.port) then
+		if lock_data and lock.is_server_alive(M.config.host, lock_data.port) then
 			-- Secondary mode: server already running in another Neovim instance
 			M._is_primary = false
 			M._takeover_port = lock_data.port
@@ -433,6 +434,7 @@ function M.start()
 		local port = effective_port()
 		local index_path = vim.fs.joinpath(dir, M.config.index_name)
 		local ok, inst = pcall(ls_server.start, {
+			host = M.config.host,
 			port = port,
 			root = dir,
 			default_index = index_path,
@@ -463,7 +465,7 @@ function M.start()
 
 		if M.config.open_browser then
 			vim.defer_fn(function()
-				util.open_in_browser(("http://127.0.0.1:%d/"):format(inst.port))
+				util.open_in_browser(("http://%s:%d/"):format(M.config.host, inst.port))
 			end, 200)
 		end
 	else
@@ -475,7 +477,7 @@ function M.start()
 		-- No browser tab connected (user closed it)? Re-open.
 		if M.config.open_browser and ls_server.connected_client_count(M._server_instance) == 0 then
 			vim.defer_fn(function()
-				util.open_in_browser(("http://127.0.0.1:%d/"):format(M._server_instance.port))
+				util.open_in_browser(("http://%s:%d/"):format(M.config.host, M._server_instance.port))
 			end, 200)
 		end
 	end

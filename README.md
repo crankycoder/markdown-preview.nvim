@@ -27,8 +27,9 @@ Live **Markdown preview** for Neovim with first-class **Mermaid diagram** suppor
   config = function()
     require("markdown_preview").setup({
       -- all optional; sane defaults shown
-      instance_mode = "takeover",  -- "takeover" (one tab) or "multi" (tab per instance)
-      port = 0,                    -- 0 = auto (8421 for takeover, OS-assigned for multi)
+      host = "127.0.0.1",              -- bind address (use "0.0.0.0" for external access)
+      instance_mode = "takeover",        -- "takeover" (one tab) or "multi" (tab per instance)
+      port = 0,                          -- 0 = auto (8421 for takeover, OS-assigned for multi)
       open_browser = true,
       debounce_ms = 300,
     })
@@ -95,6 +96,7 @@ The preview opens a polished browser app with:
 
 ```lua
 require("markdown_preview").setup({
+  host = "127.0.0.1",                   -- bind address (use "0.0.0.0" for external access)
   instance_mode = "takeover",           -- "takeover" or "multi" (see below)
   port = 0,                             -- 0 = auto (8421 for takeover, OS-assigned for multi)
   open_browser = true,                  -- auto-open browser on start

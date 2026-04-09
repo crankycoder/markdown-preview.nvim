@@ -70,16 +70,40 @@ function M.resolve_asset(rel)
 end
 
 function M.open_in_browser(url)
+	-- Always show the URL so user can click/copy it
+	vim.notify("Markdown preview: " .. url, vim.log.levels.INFO)
+	
+	-- Try vim.ui.open first (Neovim 0.10+)
+	if vim.ui and vim.ui.open then
+		local ok = pcall(vim.ui.open, url)
+		if ok then
+			return
+		end
+	end
+	
+	-- Fall back to system commands, but check if they exist first
 	local cmd
 	if vim.fn.has("mac") == 1 then
-		cmd = { "open", url }
+		if vim.fn.executable("open") == 1 then
+			cmd = { "open", url }
+		end
 	elseif vim.fn.has("unix") == 1 then
-		cmd = { "xdg-open", url }
+		if vim.fn.executable("xdg-open") == 1 then
+			cmd = { "xdg-open", url }
+		end
 	elseif vim.fn.has("win32") == 1 then
 		cmd = { "cmd.exe", "/c", "start", url }
 	end
+	
 	if cmd then
-		vim.fn.jobstart(cmd, { detach = true })
+		vim.fn.jobstart(cmd, { 
+			detach = true,
+			on_exit = function(_, code)
+				if code ~= 0 then
+					vim.notify("Browser open failed (exit code: " .. code .. "), URL is shown above", vim.log.levels.WARN)
+				end
+			end
+		})
 	end
 end
 
