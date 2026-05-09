@@ -1,5 +1,7 @@
 # markdown-preview.nvim
 
+![Tests](https://github.com/crankycoder/markdown-preview.nvim/actions/workflows/test.yml/badge.svg)
+
 > **Note:** This repository was previously known as `mermaid-playground.nvim`. It has been renamed and rewritten to support full Markdown preview alongside first-class Mermaid diagram support.
 
 Live **Markdown preview** for Neovim with first-class **Mermaid diagram** support.
