@@ -89,13 +89,23 @@ function M.open_in_browser(url, browser)
 	elseif vim.fn.has("wsl") == 1 then
 		cmd = { "explorer.exe", url }
 	elseif vim.fn.has("unix") == 1 then
-		cmd = { "xdg-open", url }
+		if vim.env.XDG_SESSION_TYPE == "wayland" and vim.fn.executable("gtk-launch") == 1 then
+			local desktop = vim.fn.system({ "xdg-settings", "get", "default-web-browser" })
+			if vim.v.shell_error == 0 and desktop ~= "" then
+				desktop = vim.trim(desktop):gsub("%.desktop$", "")
+				cmd = { "gtk-launch", desktop, url }
+			end
+		end
+		if not cmd then
+			cmd = { "xdg-open", url }
+		end
 	elseif vim.fn.has("win32") == 1 then
 		cmd = { "cmd.exe", "/c", "start", url }
 	end
-	if cmd then
-		vim.fn.jobstart(cmd, { detach = true })
+	if not cmd then
+		return
 	end
+	vim.fn.jobstart(cmd, { detach = true })
 end
 
 ---Generate a per-buffer workspace directory under Neovim's cache.
