@@ -74,6 +74,15 @@ end
 ---@param browser string|table|nil Optional override. String = browser name/binary.
 ---  Table = full command (URL appended). nil = system default.
 function M.open_in_browser(url, browser)
+	vim.notify("Markdown preview: " .. url, vim.log.levels.INFO)
+
+	-- Neovim 0.10+ built-in opener: handles cross-platform URL launch natively,
+	-- so we skip the manual platform detection below when available.
+	if not browser and vim.ui and vim.ui.open then
+		local ok = pcall(vim.ui.open, url)
+		if ok then return end
+	end
+
 	local cmd
 	if browser then
 		if type(browser) == "table" then
@@ -85,16 +94,29 @@ function M.open_in_browser(url, browser)
 			cmd = { browser, url }
 		end
 	elseif vim.fn.has("mac") == 1 then
+		-- `open` is always available on macOS, no executable check needed
 		cmd = { "open", url }
 	elseif vim.fn.has("wsl") == 1 then
 		cmd = { "explorer.exe", url }
 	elseif vim.fn.has("unix") == 1 then
-		cmd = { "xdg-open", url }
+		if vim.fn.executable("xdg-open") == 1 then
+			cmd = { "xdg-open", url }
+		else
+			vim.notify("xdg-open not found; cannot open browser automatically", vim.log.levels.WARN)
+		end
 	elseif vim.fn.has("win32") == 1 then
 		cmd = { "cmd.exe", "/c", "start", url }
 	end
+
 	if cmd then
-		vim.fn.jobstart(cmd, { detach = true })
+		vim.fn.jobstart(cmd, {
+			detach = true,
+			on_exit = function(_, code)
+				if code ~= 0 then
+					vim.notify("Browser open failed (exit code: " .. code .. "), URL is shown above", vim.log.levels.WARN)
+				end
+			end,
+		})
 	end
 end
 
