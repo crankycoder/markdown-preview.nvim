@@ -45,10 +45,20 @@ function M.remove()
 	pcall(uv.fs_unlink, lock_path())
 end
 
-function M.is_server_alive(port)
+function M.is_pid_alive(pid)
+	local ok = uv.kill(pid, 0)
+	return ok ~= nil
+end
+
+function M.is_server_alive(host, port, expected_pid)
+	-- Dead PID means stale lock — the port may have been reused by an
+	-- unrelated process. No point checking further.
+	if expected_pid and not M.is_pid_alive(expected_pid) then
+		return false
+	end
 	local alive = nil
 	local tcp = uv.new_tcp()
-	tcp:connect("127.0.0.1", port, function(err)
+	tcp:connect(host, port, function(err)
 		alive = not err
 		pcall(function() tcp:shutdown() end)
 		pcall(function() tcp:close() end)

@@ -7,6 +7,7 @@ local ls_util = require("live_server.util")
 local M = {}
 
 M.config = {
+	host = "127.0.0.1", -- bind address (use "0.0.0.0" to expose externally)
 	port = 0, -- 0 = auto; effective port depends on instance_mode
 	open_browser = true,
 
@@ -380,7 +381,7 @@ local function send_scroll_sync(bufnr)
 	if M._server_instance then
 		pcall(ls_server.send_event, M._server_instance, "scroll", payload)
 	elseif M._takeover_port then
-		require("markdown_preview.remote").send_event(M._takeover_port, "scroll", payload, M._token)
+		require("markdown_preview.remote").send_event(M.config.host, M._takeover_port, "scroll", payload, M._token)
 	end
 end
 
@@ -425,7 +426,7 @@ end
 -- so the first request includes it (the page then stashes it in
 -- sessionStorage for refreshes).
 local function browser_url(port)
-	local base = ("http://127.0.0.1:%d/"):format(port)
+	local base = ("http://%s:%d/"):format(M.config.host, port)
 	if M._token and M._token ~= "" then
 		return base .. "?t=" .. M._token
 	end
@@ -457,7 +458,7 @@ function M.start()
 	if M.config.instance_mode == "takeover" and not M._server_instance then
 		local lock = require("markdown_preview.lock")
 		local lock_data = lock.read()
-		if lock_data and lock.is_server_alive(lock_data.port) then
+		if lock_data and lock.is_server_alive(M.config.host, lock_data.port, lock_data.pid) then
 			-- Secondary: server is already running in another Neovim
 			-- instance. Adopt its token so our scroll-sync RPC works.
 			M._is_primary = false
@@ -497,6 +498,7 @@ function M.start()
 		local port = effective_port()
 		local index_path = vim.fs.joinpath(dir, M.config.index_name)
 		local ok, inst = pcall(ls_server.start, {
+			host = M.config.host,
 			port = port,
 			root = dir,
 			default_index = index_path,
